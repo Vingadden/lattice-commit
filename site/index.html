@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lattice Commit - git checkpoints for AI code repair</title>
+<meta name="description" content="An alpha package that uses git checkpoints to preserve test-improving LLM code repair progress. Synthetic benchmark evidence, real-repo validation next.">
+<meta property="og:title" content="Lattice Commit - git checkpoints for AI code repair">
+<meta property="og:description" content="Commit when tests improve. Reset when they do not. Alpha package for test-gated LLM repair loops.">
+<style>
+  :root {
+    --bg: #0b0d10;
+    --fg: #f4f1e8;
+    --muted: #a8a395;
+    --accent: #8fe3c0;
+    --line: #27313a;
+    --panel: #12171c;
+    --warn: #f6c36a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+  }
+  code, pre { font-family: "SF Mono", Menlo, Consolas, monospace; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 56px 24px 88px; }
+  .kicker { color: var(--accent); font-weight: 700; text-transform: uppercase; font-size: 13px; }
+  h1 { font-size: clamp(36px, 7vw, 68px); line-height: 1.02; margin: 12px 0 20px; letter-spacing: 0; }
+  h2 { font-size: 26px; margin: 56px 0 16px; letter-spacing: 0; }
+  h3 { font-size: 17px; margin: 28px 0 8px; letter-spacing: 0; color: var(--accent); }
+  p { margin: 0 0 16px; color: #ddd8ca; }
+  a { color: var(--accent); }
+  .lead { font-size: 20px; max-width: 760px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 24px; }
+  .badge { border: 1px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 4px; padding: 4px 9px; font-size: 13px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0 0; }
+  .button { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 5px; text-decoration: none; font-weight: 700; }
+  .primary { background: var(--accent); color: #07110d; }
+  .secondary { border: 1px solid var(--accent); color: var(--accent); }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 56px 0; }
+  pre {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow-x: auto;
+    padding: 18px 20px;
+    font-size: 14px;
+  }
+  code { background: var(--panel); border-radius: 3px; padding: 1px 5px; }
+  table { width: 100%; border-collapse: collapse; margin: 18px 0; }
+  th, td { border-bottom: 1px solid var(--line); padding: 10px 12px; text-align: left; }
+  th { color: var(--muted); font-size: 13px; text-transform: uppercase; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .note { border-left: 3px solid var(--warn); padding: 12px 0 12px 16px; color: #f0dfbc; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .tile { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 16px; }
+  .tile p { margin-bottom: 0; color: var(--muted); }
+  footer { margin-top: 72px; color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="badges">
+    <span class="badge">alpha 0.1.1 target</span>
+    <span class="badge">MIT core</span>
+    <span class="badge">synthetic benchmark: 986+ trials</span>
+  </div>
+
+  <div class="kicker">Lattice Commit</div>
+  <h1>Git checkpoints for test-gated AI code repair.</h1>
+  <p class="lead">
+    Lattice Commit wraps a one-file-at-a-time LLM repair loop with a simple
+    boundary: commit when tests improve, reset when they do not. The goal is to
+    preserve partial progress across multi-file fixes.
+  </p>
+
+  <div class="actions">
+    <a class="button primary" href="#install">Install</a>
+    <a class="button secondary" href="#evidence">Read the evidence</a>
+  </div>
+
+  <hr>
+
+  <h2 id="evidence">The Scoped Claim</h2>
+  <p>
+    In a synthetic Python benchmark, the bare edit/test/revert loop solved
+    one-file bug sets and failed when required fixes crossed file boundaries.
+    Commit-on-improvement preserved useful intermediate fixes in that tested
+    loop.
+  </p>
+
+  <table>
+    <tr><th>Benchmark setup</th><th class="num">Bare loop</th><th class="num">With checkpoints</th></tr>
+    <tr><td>Fixes contained in one file</td><td class="num">Solved</td><td class="num">Solved</td></tr>
+    <tr><td>Fixes required across 2+ files</td><td class="num">Failed</td><td class="num">Solved</td></tr>
+  </table>
+
+  <p class="note">
+    This is not yet a production guarantee. It is an alpha mechanism with
+    synthetic evidence. Real-repo validation and a public reproducibility bundle
+    are the next development milestones.
+  </p>
+
+  <h2>The Mechanism</h2>
+  <pre>best_passing = count_passing_tests()
+for cycle in range(max_cycles):
+    fix = llm.propose_fix(test_output)
+    apply(fix)
+    current = count_passing_tests()
+    if current > best_passing:
+        git_commit("lattice-commit: checkpoint")
+        best_passing = current
+    else:
+        git_reset_hard_head()</pre>
+
+  <h2 id="install">Install</h2>
+  <pre>pip install lattice-commit</pre>
+
+  <p>CLI usage with a local Ollama-backed fixer:</p>
+  <pre>lattice-commit --workspace ./your_repo --test-cmd "python -m pytest -q"</pre>
+
+  <p>Python API:</p>
+  <pre>from lattice_commit import incremental_repair
+
+result = incremental_repair(
+    workspace="./your_repo",
+    test_cmd=["python", "-m", "pytest", "-q"],
+    llm_fix=your_fix_function,
+    max_cycles=20,
+)
+print(result)
+print(result.run_log)</pre>
+
+  <h2>Safety Defaults</h2>
+  <div class="grid">
+    <div class="tile">
+      <strong>Clean repo required</strong>
+      <p>By default, the workspace must be a clean git repository root.</p>
+    </div>
+    <div class="tile">
+      <strong>Real checkpoints</strong>
+      <p>Improving selected-file changes become git commits with `lattice-commit:` messages.</p>
+    </div>
+    <div class="tile">
+      <strong>Hard reset rollback</strong>
+      <p>Non-improving edits are rolled back with `git reset --hard HEAD` plus `git clean -fd`.</p>
+    </div>
+    <div class="tile">
+      <strong>Run logs</strong>
+      <p>JSONL events are written under `.git/lattice-commit/runs/`.</p>
+    </div>
+  </div>
+
+  <h2>Roadmap</h2>
+  <ul>
+    <li>Publish the reproducible benchmark bundle.</li>
+    <li>Validate on real repositories with known multi-file bugs.</li>
+    <li>Add broader test-output parsers beyond pytest-style output.</li>
+    <li>Build dry-run/report mode before edits.</li>
+    <li>Test one integration recipe end to end before calling it supported.</li>
+  </ul>
+
+  <h2>Design Partner Hypothesis</h2>
+  <p>
+    Hosted dashboards, alerts, SSO, and team policies are not shipped yet. They
+    become worth building only if real teams see the mechanism catching repeated
+    regressions in their own repair loops.
+  </p>
+  <p><a href="mailto:bentleymoonperkins@gmail.com">Contact the project</a></p>
+
+  <footer>
+    MIT-licensed core. Alpha software; use on a branch or disposable clone.
+  </footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,4 @@
+# Language stats: this is a Python tool. The static landing page under site/ is a
+# demo asset, not the codebase — exclude it so the badge reflects the actual work.
+site/** linguist-documentation
+*.html linguist-documentation
